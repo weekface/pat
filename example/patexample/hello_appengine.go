@@ -11,7 +11,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/bmizerany/pat"
+	"github.com/weekface/pat"
 )
 
 // hello world, the web server

@@ -90,17 +90,23 @@ import (
 // match a pattern for a method other than the method requested and set the
 // Status to "405 Method Not Allowed".
 type PatternServeMux struct {
-	handlers map[string][]*patHandler
+	handlers    map[string][]*patHandler
+	middlewares []*middlewareHandler
 }
 
 // New returns a new PatternServeMux.
 func New() *PatternServeMux {
-	return &PatternServeMux{make(map[string][]*patHandler)}
+	return &PatternServeMux{handlers: make(map[string][]*patHandler), middlewares: make([]*middlewareHandler, 0)}
 }
 
 // ServeHTTP matches r.URL.Path against its routing table using the rules
 // described above.
 func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Call middlwares first
+	for _, md := range p.middlewares {
+		md.ServeHTTP(w, r)
+	}
+
 	for _, ph := range p.handlers[r.Method] {
 		if params, ok := ph.try(r.URL.Path); ok {
 			if len(params) > 0 {
@@ -131,6 +137,11 @@ func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Allow", strings.Join(allowed, ", "))
 	http.Error(w, "Method Not Allowed", 405)
+}
+
+// Add middleware support
+func (p *PatternServeMux) Use(md http.Handler) {
+	p.middlewares = append(p.middlewares, &middlewareHandler{md})
 }
 
 // Head will register a pattern with a handler for HEAD requests.
@@ -204,6 +215,10 @@ func Tail(pat, path string) string {
 		}
 	}
 	return ""
+}
+
+type middlewareHandler struct {
+	http.Handler
 }
 
 type patHandler struct {

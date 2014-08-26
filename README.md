@@ -2,7 +2,7 @@
 
 ## INSTALL
 
-	$ go get github.com/bmizerany/pat
+	$ go get github.com/weekface/pat
 
 ## USE
 
@@ -11,7 +11,7 @@
 	import (
 		"io"
 		"net/http"
-		"github.com/bmizerany/pat"
+		"github.com/weekface/pat"
 		"log"
 	)
 
@@ -20,8 +20,14 @@
 		io.WriteString(w, "hello, "+req.URL.Query().Get(":name")+"!\n")
 	}
 
+  // add middleware
+	func myMiddleware(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("myMiddleware")
+	}
+
 	func main() {
 		m := pat.New()
+		m.Use(http.HandlerFunc(myMiddleware))
 		m.Get("/hello/:name", http.HandlerFunc(HelloServer))
 
 		// Register this pat with the default serve mux so that other packages
@@ -36,7 +42,7 @@
 It's that simple.
 
 For more information, see:
-http://godoc.org/github.com/bmizerany/pat
+http://godoc.org/github.com/weekface/pat
 
 ## CONTRIBUTORS
 
@@ -44,6 +50,7 @@ http://godoc.org/github.com/bmizerany/pat
 * Blake Mizerany (@bmizerany) - github.com/bmizerany
 * Evan Shaw
 * George Rogers
+* Weekface - github.com/weekface
 
 ## LICENSE
 
